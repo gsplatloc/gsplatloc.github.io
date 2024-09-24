@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="GSplatLoc: Grounding Keypoint Descriptors into 3D Gaussian Splatting for Improved Visual Localization">
+  <meta name="keywords" content="Feature, 3DGS, 3D Gaussian Splatting, Distillation, Radiance Fields, Feature Fields">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- <link rel="icon" type="image/x-icon" href="/feature-3dgs.github.io/media/pipeline.png"> -->
+  
+  <title>GSplatLoc: Grounding Keypoint Descriptors into 3D Gaussian Splatting for Improved Visual Localization</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script> -->
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+  <!-- custom additional scripts -->
+
+  <link rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- https://docs.mathjax.org/en/latest/web/configuration.html#configuration-using-an-in-line-script -->
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
+  <script
+  defer
+  src="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/index.js"
+  ></script>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/styles.css"
+  />
+
+  <!-- swiper -->
+  <!-- https://swiperjs.com/demos -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+
+  <link rel="image_src" href="./media/pipeline.png">
+  
+  <!-- img comparison slider -->
+  <!-- https://github.com/sneas/img-comparison-slider -->
+  <style>
+    .before,
+    .after {
+      margin: 0;
+    }
+  
+    .before figcaption,
+    .after figcaption {
+      background: #fff;
+      border: 1px solid #c0c0c0;
+      border-radius: 4px;
+      color: #2e3452;
+      opacity: 0.8;
+      padding: 4px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      line-height: 70%;
+    }
+  
+    .before figcaption {
+      left: 4px;
+    }
+  
+    .after figcaption {
+      right: 4px;
+    }
+  </style>
+
+<style>
+  .button-container_teaser {
+      display: flex;       
+      justify-content: center; 
+      align-items: center;
+  }
+
+  .glow-button {
+      position: relative;
+      display: inline-block;
+      padding: 2px;
+      border-radius: 10px;
+      z-index: 0;
+      margin-bottom: 15px;
+  }
+
+  .glow-button button {
+      background: transparent; 
+      border: none; 
+      color: white; 
+      padding: 5px 10px; 
+      font-size: 16px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      outline: none; 
+  }
+
+  .glow-button:before {
+      content: "";
+      background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      background-size: 400%;
+      z-index: -1;
+      filter: blur(5px);
+      -webkit-filter: blur(5px);
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      animation: glowing-button-85 20s linear infinite;
+      transition: opacity 0.3s ease-in-out;
+      border-radius: 10px;
+  }
+
+  @keyframes glowing-button-85 {
+      0% { background-position: 0 0; }
+      50% { background-position: 400% 0; }
+      100% { background-position: 0 0; }
+  }
+
+  .glow-button:after {
+      z-index: -1;
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #222;
+      left: 0;
+      top: 0;
+      border-radius: 10px;
+  }
+</style>
+
+<style>
+  .container_teaser {
+      display: flex; /* Enables Flexbox */
+      justify-content: center; /* Horizontally centers the content */
+      align-items: center; /* Vertically centers the content */
+      height: 100%; /* Set the height of the container */
+  }
+
+  .column_teaser {
+      flex: 0 0 auto; /* This ensures that the column doesn't grow or shrink */
+      width: 100%; /* Adjust this width as needed */
+      max-width: 800px; /* Adjust this max-width as needed */
+      margin: 0 auto; /* Centers the column within the container */
+  }
+</style>
+  <script
+  defer
+  src="./static/js/image-comparison-slider.js"
+  ></script>
+  <link
+    rel="stylesheet"
+    href="./static/css/image-comparison-slider.css"
+  />
+
+</head>
+<body>
+</head>
+<body>
+
+<!-- <nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://keunhong.com">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More Research
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://hypernerf.github.io">
+            HyperNeRF
+          </a>
+          <a class="navbar-item" href="https://nerfies.github.io">
+            Nerfies
+          </a>
+          <a class="navbar-item" href="https://latentfusion.github.io">
+            LatentFusion
+          </a>
+          <a class="navbar-item" href="https://photoshape.github.io">
+            PhotoShape
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav> -->
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <!-- <h1 class="title is-1 publication-title">GSplatLoc: Grounding Keypoint Descriptors into 3D Gaussian Splatting for Improved Visual Localization</h1> -->
+          <h1 class="title is-1 publication-title" style="background: linear-gradient(to bottom, rgb(15, 201, 244), rgb(1, 109, 102)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">GSplatLoc</h1>
+          <h1 class="title is-2 publication-title">Grounding Keypoint Descriptors into 3D Gaussian Splatting
+            for Improved Visual Localization</h1>
+            <style>
+              .author-block {
+                  margin-right: 10px;
+              }
+            </style>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                Gennady Sidorov<sup>1,2</sup>,</span>
+              <span class="author-block">
+                Malik Mohrat<sup>1,2</sup>,</span>
+              <span class="author-block">
+                Ksenia Lebedeva<sup>1</sup>,</span>
+              <span class="author-block">
+                Ruslan Rakhimov<sup>2</sup>,</span>
+              <span class="author-block"> 
+                Sergey Kolyubin<sup>1</sup></span>
+
+            </div>
+
+          <!-- <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>University of California, Los Angeles</span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>2</sup>University of Texas at Austin</span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>3</sup>DEVCOM Army Research Laboratory</span>
+          </div> -->
+          <style>
+            .univerity-block {
+                margin-right: 14px;
+            }
+          </style>
+          <div class="is-size-5 publication-authors">
+            <span class="univerity-block" style="color: rgb(1, 77, 125);"><sup>1</sup>ITMO University,</span>
+            <span class="univerity-block" style="color: rgb(1, 109, 102);"><sup>2</sup>Robotics Center</span>
+          </div>
+
+
+          <!-- <div class="is-size-4 publication-authors">
+            <span class="univerity-block"><b>CVPR 2024, Seattle</b></span>
+            <span class="univerity-block">CVPR 2024, Seattle</span>
+            <a href="https://cvpr.thecvf.com/">CVPR 2024, Seattle</a>
+          </div> -->
+          
+          <!-- <div class="is-size-5 publication-authors">
+            <span class="univerity-block" style="color: rgb(169, 16, 151);">CVPR 2024, Seattle</span>
+          </div> -->
+        
+          <!-- <div class="is-size-5 publication-authors">
+          <body>
+            <center>
+                <h1>
+                    <font color="#FF2626"><b>H</b></font>
+                    <font color="#252A34"><b>i</b></font>
+                    <font color="#753422"><b>g</b></font>
+                    <font color="#FFD523"><b>h</b></font>
+                    <font color="#71EFA3"><b>l</b></font>
+                    <font color="#0F52BA"><b>i</b></font>
+                    <font color="#66CC66"><b>g</b></font>
+                    <font color="#FF9966"><b>h</b></font>
+                    <font color="#FFCCCC"><b>t</b></font>
+                    <font color="#00C1D4">k</font>
+                    <font color="#EFE3D0">s</font>
+                </h1>
+            </center>
+          </body>
+          </div> -->
+        
+
+          <div class="column has-text-centered">
+            <div class="publication-links" style="display: flex; justify-content: center; align-items: center;">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <span class="button is-normal is-rounded is-light" style="color: gray; cursor: not-allowed;">
+                  <span class="icon">
+                    <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </span>
+              </span>
+              <!-- Video Link. -->
+              <span class="link-block">
+                <span class="button is-normal is-rounded is-light" style="color: gray; cursor: not-allowed;">
+                  <span class="icon">
+                    <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Video</span>
+                </span>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/haksorus/gsplatloc" target="_blank" class="button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                </a>
+              </span>
+            </div>
+          </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</section>
+
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Although various visual localization approaches
+            exist, such as scene coordinate and pose regression, these methods often struggle with high memory consumption or extensive
+            optimization requirements. To address these challenges, we
+            utilize recent advancements in novel view synthesis, particularly
+            3D Gaussian Splatting (3DGS), to enhance localization. 3DGS
+            allows for the compact encoding of both 3D geometry and scene
+            appearance with its spatial features. Our method leverages
+            the dense description maps produced by XFeat’s lightweight
+            keypoint detection and description model. We propose distilling
+            these dense keypoint descriptors into 3DGS to improve the
+            model’s spatial understanding, leading to more accurate camera
+            pose predictions through 2D-3D correspondences. After estimating an initial pose, we refine it using a photometric warping loss.
+            Benchmarking on popular indoor and outdoor datasets shows
+            that our approach surpasses state-of-the-art Neural Render
+            Pose (NRP) methods, including NeRFMatch and PNeRFLoc.
+          </p>
+          
+          <div class="columns is-centered has-text-centered">
+            <div class="column is-four-fifths">
+
+            </div>
+          </div>
+          <!--/ Paper video. -->
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+
+    <!-- Pipeline. -->
+    <!-- <h3 class="title is-4">Methodology</h3>
+    <div class="content has-text-justified">
+      <p>
+      </p>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column">
+        <img src="./media/pipeline.png"
+             class="interpolation-image"
+             alt="Interpolate start reference image."/>
+        <p>...</p>
+      </div>
+    </div> -->
+    <!--/ Pipeline. -->
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Approach</h2>
+    <div class="content has-text-justified">
+      <div class="columns is-centered">
+        <figure class="image is-centered">
+          <img src="./media/pipeline.png" alt="Pipeline Image">
+        </figure>
+      </div>
+      <p>
+        We model the scene using a feature-based 3D Gaussian Splatting (3DGS) approach, grounding keypoint descriptors into a 3D representation for fast, reliable coarse pose estimation. Descriptors from the XFeat network enable localization in both static and dynamic environments. In the test stage, we estimate the initial coarse pose by matching 2D sparse keypoints from the query image to 3D points in the 3DGS model using a simple but effective greedy matching strategy, followed by a Perspective-n-Point (PnP) solver in a RANSAC loop. We refine the pose by aligning a rendered image with the input query using an RGB warping loss, improving accuracy through test-time optimization. Our pipeline is fully end-to-end, meaning it works without extra learnable modules or complex steps. <br> <br>
+      </p>
+    </div>
+  </div>
+</section>
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h3 class="title is-3">7Scenes evaluation</h3>
+    <div class="content has-text-justified">
+    <p>
+      We evaluate our method in indoor scenarios using the 7Scenes dataset. 
+      Each image below is divided by a slider. The left side shows the <b>ground truth (GT) image</b>, while the right side displays the render from our <b>estimated refined pose</b>. 
+      By comparing these side-by-side visualizations, you can observe the high accuracy of our approach in matching the estimated pose to the ground truth.<br>
+    </p>
+    </div>
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-6">Fire</h2>
+        <div>
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/7Scenes/Fire_GT.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/7Scenes/Fire_Render.png">
+          </img-comparison-slider>
+        </div>
+      </div>
+
+      <div class="column">
+        <h2 class="title is-6">Office</h2>
+        <div>
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/7Scenes/Office_GT.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/7Scenes/Office_Render.png">
+          </img-comparison-slider>
+        </div>
+      </div>
+    </div>
+    
+
+    <style>
+      .before,
+      .after {
+        margin: 0;
+      }
+    
+      .before figcaption,
+      .after figcaption {
+        background: #fff;
+        border: 1px solid #c0c0c0;
+        border-radius: 4px;
+        color: #2e3452;
+        opacity: 0.8;
+        padding: 4px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        line-height: 100%;
+      }
+    
+      .before figcaption {
+        left: 4px;
+      }
+    
+      .after figcaption {
+        right: 4px;
+      }
+    </style>
+  </div>
+</section>   
+
+
+
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h3 class="title is-3">Cambridge Landmarks evaluation</h3>
+    <div class="content has-text-justified">
+    <p>
+      We evaluate our method on the Cambridge Landmarks dataset for outdoor scenarios, addressing challenges like varying lighting and diverse architectural features. Our approach demonstrates robust performance in complex urban environments, accurately estimating camera poses. <br>
+    </p>
+    </div>
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-6">KingsCollege</h2>
+        <div>
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/Cambridge/Kings_GT.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/Cambridge/Kings_Render.png">
+          </img-comparison-slider>
+        </div>
+      </div>
+
+      <div class="column">
+        <h2 class="title is-6">ShopFacade</h2>
+        <div>
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/Cambridge/Shop_GT.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/Cambridge/Shop_Render.png">
+          </img-comparison-slider>
+        </div>
+      </div>
+    </div>
+
+
+    <style>
+      .before,
+      .after {
+        margin: 0;
+      }
+    
+      .before figcaption,
+      .after figcaption {
+        background: #fff;
+        border: 1px solid #c0c0c0;
+        border-radius: 4px;
+        color: #2e3452;
+        opacity: 0.8;
+        padding: 4px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        line-height: 100%;
+      }
+    
+      .before figcaption {
+        left: 4px;
+      }
+    
+      .after figcaption {
+        right: 4px;
+      }
+    </style>
+  </div>
+</section>   
+
+
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h3 class="title is-3">Dynamic scenes evaluation</h3>
+    <div class="content has-text-justified">
+    <p>
+      Additionally, we evaluate our method in challenging dynamic environments using outdoor Phototourism dataset and indoor Sitcoms3D dataset. 
+      These datasets allow us to assess the performance of our approach in more complex and variable scenes, demonstrating its robustness and versatility across different types of environments. <br>
+    </p>
+    </div>
+    <h2 class="title is-6"><b>Phototourism</b> / Brandenburg Gate</h2>
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="slider-container">
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/Dynamics/Gate_GT3.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/Dynamics/Gate_Render3.png">
+            </figure>
+          </img-comparison-slider>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="slider-container">
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/Dynamics/Gate_GT4.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/Dynamics/Gate_Render4.png">
+            </figure>
+          </img-comparison-slider>
+        </div>
+      </div>
+    </div>
+    
+    <h2 class="title is-6"><b>Sitcoms3D</b> / TBBT Big living room</h2>
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="slider-container">
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/Dynamics/TBBT_GT.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/Dynamics/TBBT_Render.png">
+            </figure>
+          </img-comparison-slider>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="slider-container">
+          <img-comparison-slider>
+            <figure slot="first" class="before">
+              <img width="100%" src="./media/evaluation/Dynamics/TBBT_GT2.png">
+            </figure>
+            <figure slot="second" class="after">
+              <img width="100%" src="./media/evaluation/Dynamics/TBBT_Render2.png">
+            </figure>
+          </img-comparison-slider>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .before,
+      .after {
+        margin: 0;
+      }
+    
+      .before figcaption,
+      .after figcaption {
+        background: #fff;
+        border: 1px solid #c0c0c0;
+        border-radius: 4px;
+        color: #2e3452;
+        opacity: 0.8;
+        padding: 4px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        line-height: 100%;
+      }
+    
+      .before figcaption {
+        left: 4px;
+      }
+    
+      .after figcaption {
+        right: 4px;
+      }
+
+      .slider-container {
+        height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      img-comparison-slider {
+        max-height: 100%;
+        width: 100%;
+      }
+
+      img-comparison-slider img {
+        object-fit: cover;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </div>
+</section>   
+
+
+  </div>
+</section>
+
+
+<!-- <section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@inproceedings{
+
+    TODO: Add here cite
+
+}</code></pre>
+  </div>
+</section> -->
+
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link"
+         href="">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+      <a class="icon-link" href="" class="external-link" disabled>
+        <i class="fab fa-github"></i>
+      </a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            Source code borrowed from <a
+              href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleSliders() {
+      // Get both slider containers
+      var slider1 = document.getElementById("slider1-container_teaser");
+      var slider2 = document.getElementById("slider2-container_teaser");
+
+      // Toggle visibility
+      if (slider1.style.display === "none") {
+          slider1.style.display = "block";
+          slider2.style.display = "none";
+      } else {
+          slider1.style.display = "none";
+          slider2.style.display = "block";
+      }
+  }
+</script>
+
+</body>
+</html>
